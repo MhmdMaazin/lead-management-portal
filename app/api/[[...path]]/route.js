@@ -38,47 +38,241 @@ async function handleRoute(request, { params }) {
   try {
     const db = await connectToMongo()
 
-    // Root endpoint - GET /api/root (since /api/ is not accessible with catch-all)
-    if (route === '/root' && method === 'GET') {
-      return handleCORS(NextResponse.json({ message: "Hello World" }))
-    }
-    // Root endpoint - GET /api/root (since /api/ is not accessible with catch-all)
+    // Root endpoint
     if (route === '/' && method === 'GET') {
-      return handleCORS(NextResponse.json({ message: "Hello World" }))
+      return handleCORS(NextResponse.json({ message: "Lead Management Portal API" }))
     }
 
-    // Status endpoints - POST /api/status
-    if (route === '/status' && method === 'POST') {
-      const body = await request.json()
-      
-      if (!body.client_name) {
-        return handleCORS(NextResponse.json(
-          { error: "client_name is required" }, 
-          { status: 400 }
-        ))
-      }
-
-      const statusObj = {
-        id: uuidv4(),
-        client_name: body.client_name,
-        timestamp: new Date()
-      }
-
-      await db.collection('status_checks').insertOne(statusObj)
-      return handleCORS(NextResponse.json(statusObj))
-    }
-
-    // Status endpoints - GET /api/status
-    if (route === '/status' && method === 'GET') {
-      const statusChecks = await db.collection('status_checks')
+    // Leads endpoints
+    if (route === '/leads' && method === 'GET') {
+      const leads = await db.collection('leads')
         .find({})
         .limit(1000)
         .toArray()
-
-      // Remove MongoDB's _id field from response
-      const cleanedStatusChecks = statusChecks.map(({ _id, ...rest }) => rest)
       
-      return handleCORS(NextResponse.json(cleanedStatusChecks))
+      const cleanedLeads = leads.map(({ _id, ...rest }) => rest)
+      return handleCORS(NextResponse.json(cleanedLeads))
+    }
+
+    if (route === '/leads' && method === 'POST') {
+      const body = await request.json()
+      
+      const lead = {
+        id: uuidv4(),
+        ...body,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+
+      await db.collection('leads').insertOne(lead)
+      const { _id, ...cleanedLead } = lead
+      return handleCORS(NextResponse.json(cleanedLead))
+    }
+
+    if (route.startsWith('/leads/') && method === 'GET') {
+      const leadId = route.split('/')[2]
+      const lead = await db.collection('leads').findOne({ id: leadId })
+      
+      if (!lead) {
+        return handleCORS(NextResponse.json(
+          { error: "Lead not found" }, 
+          { status: 404 }
+        ))
+      }
+
+      const { _id, ...cleanedLead } = lead
+      return handleCORS(NextResponse.json(cleanedLead))
+    }
+
+    if (route.startsWith('/leads/') && method === 'PUT') {
+      const leadId = route.split('/')[2]
+      const body = await request.json()
+      
+      const updateResult = await db.collection('leads').updateOne(
+        { id: leadId },
+        { 
+          $set: { 
+            ...body, 
+            updatedAt: new Date() 
+          } 
+        }
+      )
+
+      if (updateResult.matchedCount === 0) {
+        return handleCORS(NextResponse.json(
+          { error: "Lead not found" }, 
+          { status: 404 }
+        ))
+      }
+
+      const updatedLead = await db.collection('leads').findOne({ id: leadId })
+      const { _id, ...cleanedLead } = updatedLead
+      return handleCORS(NextResponse.json(cleanedLead))
+    }
+
+    if (route.startsWith('/leads/') && method === 'DELETE') {
+      const leadId = route.split('/')[2]
+      
+      const deleteResult = await db.collection('leads').deleteOne({ id: leadId })
+      
+      if (deleteResult.deletedCount === 0) {
+        return handleCORS(NextResponse.json(
+          { error: "Lead not found" }, 
+          { status: 404 }
+        ))
+      }
+
+      return handleCORS(NextResponse.json({ message: "Lead deleted successfully" }))
+    }
+
+    // Saved leads endpoints
+    if (route === '/saved-leads' && method === 'GET') {
+      const savedLeads = await db.collection('saved_leads')
+        .find({})
+        .toArray()
+      
+      const cleanedSavedLeads = savedLeads.map(({ _id, ...rest }) => rest)
+      return handleCORS(NextResponse.json(cleanedSavedLeads))
+    }
+
+    if (route === '/saved-leads' && method === 'POST') {
+      const body = await request.json()
+      
+      const savedLead = {
+        id: uuidv4(),
+        leadId: body.leadId,
+        userId: body.userId || 'default-user',
+        createdAt: new Date()
+      }
+
+      await db.collection('saved_leads').insertOne(savedLead)
+      const { _id, ...cleanedSavedLead } = savedLead
+      return handleCORS(NextResponse.json(cleanedSavedLead))
+    }
+
+    if (route.startsWith('/saved-leads/') && method === 'DELETE') {
+      const leadId = route.split('/')[2]
+      
+      const deleteResult = await db.collection('saved_leads').deleteOne({ 
+        leadId: leadId 
+      })
+      
+      return handleCORS(NextResponse.json({ 
+        message: "Saved lead removed successfully",
+        deleted: deleteResult.deletedCount > 0
+      }))
+    }
+
+    // Prospection leads endpoints
+    if (route === '/prospection-leads' && method === 'GET') {
+      const prospectionLeads = await db.collection('prospection_leads')
+        .find({})
+        .toArray()
+      
+      const cleanedProspectionLeads = prospectionLeads.map(({ _id, ...rest }) => rest)
+      return handleCORS(NextResponse.json(cleanedProspectionLeads))
+    }
+
+    if (route === '/prospection-leads' && method === 'POST') {
+      const body = await request.json()
+      
+      const prospectionLead = {
+        id: uuidv4(),
+        leadId: body.leadId,
+        userId: body.userId || 'default-user',
+        createdAt: new Date()
+      }
+
+      await db.collection('prospection_leads').insertOne(prospectionLead)
+      const { _id, ...cleanedProspectionLead } = prospectionLead
+      return handleCORS(NextResponse.json(cleanedProspectionLead))
+    }
+
+    if (route.startsWith('/prospection-leads/') && method === 'DELETE') {
+      const leadId = route.split('/')[2]
+      
+      const deleteResult = await db.collection('prospection_leads').deleteOne({ 
+        leadId: leadId 
+      })
+      
+      return handleCORS(NextResponse.json({ 
+        message: "Prospection lead removed successfully",
+        deleted: deleteResult.deletedCount > 0
+      }))
+    }
+
+    // Contact history endpoints
+    if (route === '/contact-history' && method === 'GET') {
+      const contactHistory = await db.collection('contact_history')
+        .find({})
+        .sort({ timestamp: -1 })
+        .limit(100)
+        .toArray()
+      
+      const cleanedContactHistory = contactHistory.map(({ _id, ...rest }) => rest)
+      return handleCORS(NextResponse.json(cleanedContactHistory))
+    }
+
+    if (route === '/contact-history' && method === 'POST') {
+      const body = await request.json()
+      
+      const contactRecord = {
+        id: uuidv4(),
+        leadId: body.leadId,
+        type: body.type, // 'email' or 'postal'
+        recipient: body.recipient,
+        subject: body.subject,
+        content: body.content,
+        status: body.status || 'sent',
+        timestamp: new Date(),
+        userId: body.userId || 'default-user'
+      }
+
+      await db.collection('contact_history').insertOne(contactRecord)
+      const { _id, ...cleanedContactRecord } = contactRecord
+      return handleCORS(NextResponse.json(cleanedContactRecord))
+    }
+
+    // Email sending endpoint (placeholder)
+    if (route === '/send-email' && method === 'POST') {
+      const body = await request.json()
+      
+      // In a real implementation, you would integrate with SendGrid here
+      // For now, we'll just log the email and return success
+      console.log('Email would be sent:', body)
+      
+      const emailRecord = {
+        id: uuidv4(),
+        to: body.to,
+        subject: body.subject,
+        content: body.content,
+        status: 'sent',
+        timestamp: new Date()
+      }
+
+      await db.collection('emails').insertOne(emailRecord)
+      const { _id, ...cleanedEmailRecord } = emailRecord
+      return handleCORS(NextResponse.json(cleanedEmailRecord))
+    }
+
+    // Postal mail sending endpoint (placeholder)
+    if (route === '/send-mail' && method === 'POST') {
+      const body = await request.json()
+      
+      // In a real implementation, you would integrate with a postal service here
+      console.log('Postal mail would be sent:', body)
+      
+      const mailRecord = {
+        id: uuidv4(),
+        to: body.to,
+        content: body.content,
+        status: 'scheduled',
+        timestamp: new Date()
+      }
+
+      await db.collection('postal_mail').insertOne(mailRecord)
+      const { _id, ...cleanedMailRecord } = mailRecord
+      return handleCORS(NextResponse.json(cleanedMailRecord))
     }
 
     // Route not found

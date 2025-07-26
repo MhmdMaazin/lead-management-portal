@@ -1,8 +1,8 @@
 import './globals.css'
 
 export const metadata = {
-  title: 'Next.js MongoDB Template',
-  description: 'A simple template with App Router, MongoDB, and shadcn/ui',
+  title: 'Lead Management Portal',
+  description: 'Manage and track your project leads effectively',
 }
 
 export default function RootLayout({ children }) {
