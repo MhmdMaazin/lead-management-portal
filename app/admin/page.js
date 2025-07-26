@@ -420,6 +420,23 @@ export default function AdminDashboard() {
     </form>
   )
 
+  // Show loading spinner while checking authentication
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Checking authentication...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // If not authenticated, don't render anything (will redirect to login)
+  if (!isAuthenticated) {
+    return null
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -430,7 +447,9 @@ export default function AdminDashboard() {
               <Settings className="h-6 w-6" />
               Backend Dashboard
             </h1>
-            <p className="text-gray-600">Manage leads and projects</p>
+            <p className="text-gray-600">
+              Welcome back, {adminUser?.email || 'Admin'}
+            </p>
           </div>
           <div className="flex items-center gap-4">
             <Button 
@@ -443,6 +462,10 @@ export default function AdminDashboard() {
             <Button variant="outline" onClick={() => window.open('/', '_blank')}>
               <Eye className="h-4 w-4 mr-2" />
               View Frontend
+            </Button>
+            <Button variant="outline" onClick={handleLogout}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
             </Button>
           </div>
         </div>
