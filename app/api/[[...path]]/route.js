@@ -97,6 +97,89 @@ async function handleRoute(request, { params }) {
   try {
     const db = await connectToMongo()
 
+    // Authentication endpoints
+    if (route === '/auth/login' && method === 'POST') {
+      const body = await request.json()
+      const { email, password } = body
+      
+      if (!email || !password) {
+        return handleCORS(NextResponse.json(
+          { error: "Email and password are required" }, 
+          { status: 400 }
+        ))
+      }
+      
+      // Hash the provided password
+      const hashedPassword = hashPassword(password)
+      
+      // Find admin user
+      const adminUser = await db.collection('admin_users').findOne({ 
+        email: email.toLowerCase(),
+        password: hashedPassword
+      })
+      
+      if (!adminUser) {
+        return handleCORS(NextResponse.json(
+          { error: "Invalid credentials" }, 
+          { status: 401 }
+        ))
+      }
+      
+      // Generate token
+      const token = generateToken(adminUser)
+      
+      // Return success response
+      return handleCORS(NextResponse.json({
+        token,
+        user: {
+          id: adminUser.id,
+          email: adminUser.email,
+          role: adminUser.role
+        }
+      }))
+    }
+    
+    if (route === '/auth/verify' && method === 'GET') {
+      const authHeader = request.headers.get('Authorization')
+      
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return handleCORS(NextResponse.json(
+          { error: "No token provided" }, 
+          { status: 401 }
+        ))
+      }
+      
+      const token = authHeader.substring(7)
+      const payload = verifyToken(token)
+      
+      if (!payload) {
+        return handleCORS(NextResponse.json(
+          { error: "Invalid token" }, 
+          { status: 401 }
+        ))
+      }
+      
+      // Verify user still exists
+      const adminUser = await db.collection('admin_users').findOne({ 
+        id: payload.id 
+      })
+      
+      if (!adminUser) {
+        return handleCORS(NextResponse.json(
+          { error: "User not found" }, 
+          { status: 401 }
+        ))
+      }
+      
+      return handleCORS(NextResponse.json({
+        user: {
+          id: adminUser.id,
+          email: adminUser.email,
+          role: adminUser.role
+        }
+      }))
+    }
+
     // Root endpoint
     if (route === '/' && method === 'GET') {
       return handleCORS(NextResponse.json({ message: "Lead Management Portal API" }))
