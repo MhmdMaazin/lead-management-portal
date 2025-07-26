@@ -116,9 +116,28 @@ export default function App() {
   ]
 
   useEffect(() => {
-    setLeads(mockLeads)
-    setFilteredLeads(mockLeads)
+    fetchLeads()
   }, [])
+
+  const fetchLeads = async () => {
+    try {
+      const response = await fetch('/api/leads')
+      if (response.ok) {
+        const data = await response.json()
+        setLeads(data.length > 0 ? data : mockLeads) // Fallback to mock data if no leads in DB
+        setFilteredLeads(data.length > 0 ? data : mockLeads)
+      } else {
+        // Fallback to mock data if API fails
+        setLeads(mockLeads)
+        setFilteredLeads(mockLeads)
+      }
+    } catch (error) {
+      console.error('Error fetching leads:', error)
+      // Fallback to mock data if API fails
+      setLeads(mockLeads)
+      setFilteredLeads(mockLeads)
+    }
+  }
 
   useEffect(() => {
     let filtered = leads
