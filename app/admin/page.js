@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Textarea } from '@/components/ui/textarea'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { 
-  Plus, Edit, Trash2, Eye, Settings, Database, Users, FileText, Mail, Phone, MapPin, Calendar, Building, TreePine, AlertTriangle, Save, X
+  Plus, Edit, Trash2, Eye, Settings, Database, Users, FileText, Mail, Phone, MapPin, Calendar, Building, TreePine, AlertTriangle, Save, X, LogOut
 } from 'lucide-react'
 
 export default function AdminDashboard() {
