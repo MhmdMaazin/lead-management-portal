@@ -9,8 +9,8 @@ import uuid
 # Load environment variables
 load_dotenv()
 
-# Get base URL from environment
-BASE_URL = os.getenv('NEXT_PUBLIC_BASE_URL', 'http://localhost:3000')
+# Get base URL from environment - using localhost for testing since external URL has routing issues
+BASE_URL = 'http://localhost:3000'
 API_BASE_URL = f"{BASE_URL}/api"
 
 print(f"Testing Lead Management Portal API at: {API_BASE_URL}")
