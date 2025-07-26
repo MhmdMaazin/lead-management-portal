@@ -18,9 +18,13 @@ import {
 export default function AdminDashboard() {
   const [leads, setLeads] = useState([])
   const [loading, setLoading] = useState(true)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [checkingAuth, setCheckingAuth] = useState(true)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [selectedLead, setSelectedLead] = useState(null)
+  const [adminUser, setAdminUser] = useState(null)
+  const router = useRouter()
   const [formData, setFormData] = useState({
     title: '',
     category: 'environmental',
@@ -42,8 +46,55 @@ export default function AdminDashboard() {
   })
 
   useEffect(() => {
-    fetchLeads()
+    checkAuthentication()
   }, [])
+
+  const checkAuthentication = async () => {
+    try {
+      const token = localStorage.getItem('adminToken')
+      const user = localStorage.getItem('adminUser')
+      
+      if (!token || !user) {
+        router.push('/admin/login')
+        return
+      }
+
+      // Verify token with backend
+      const response = await fetch('/api/auth/verify', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+
+      if (response.ok) {
+        setIsAuthenticated(true)
+        setAdminUser(JSON.parse(user))
+        await fetchLeads()
+      } else {
+        // Token is invalid, redirect to login
+        localStorage.removeItem('adminToken')
+        localStorage.removeItem('adminUser')
+        router.push('/admin/login')
+      }
+    } catch (error) {
+      console.error('Auth check error:', error)
+      router.push('/admin/login')
+    } finally {
+      setCheckingAuth(false)
+    }
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('adminToken')
+    localStorage.removeItem('adminUser')
+    router.push('/admin/login')
+  }
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchLeads()
+    }
+  }, [isAuthenticated])
 
   const fetchLeads = async () => {
     try {
