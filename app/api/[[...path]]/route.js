@@ -1,6 +1,7 @@
 import { MongoClient } from 'mongodb'
 import { v4 as uuidv4 } from 'uuid'
 import { NextResponse } from 'next/server'
+import crypto from 'crypto'
 
 // MongoDB connection
 let client
@@ -13,6 +14,64 @@ async function connectToMongo() {
     db = client.db(process.env.DB_NAME)
   }
   return db
+}
+
+// Initialize admin user
+async function initializeAdminUser() {
+  const db = await connectToMongo()
+  
+  // Check if admin user exists
+  const adminUser = await db.collection('admin_users').findOne({ email: 'admin@gmail.com' })
+  
+  if (!adminUser) {
+    // Create admin user
+    const hashedPassword = crypto.createHash('sha256').update('12345678').digest('hex')
+    
+    await db.collection('admin_users').insertOne({
+      id: uuidv4(),
+      email: 'admin@gmail.com',
+      password: hashedPassword,
+      role: 'admin',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    })
+    
+    console.log('Admin user created: admin@gmail.com / 12345678')
+  }
+}
+
+// Call initialization
+initializeAdminUser().catch(console.error)
+
+// Generate JWT token (simple implementation)
+function generateToken(user) {
+  const payload = {
+    id: user.id,
+    email: user.email,
+    role: user.role,
+    timestamp: Date.now()
+  }
+  return Buffer.from(JSON.stringify(payload)).toString('base64')
+}
+
+// Verify JWT token
+function verifyToken(token) {
+  try {
+    const payload = JSON.parse(Buffer.from(token, 'base64').toString())
+    // Check if token is not older than 24 hours
+    const maxAge = 24 * 60 * 60 * 1000 // 24 hours in milliseconds
+    if (Date.now() - payload.timestamp > maxAge) {
+      return null
+    }
+    return payload
+  } catch (error) {
+    return null
+  }
+}
+
+// Hash password
+function hashPassword(password) {
+  return crypto.createHash('sha256').update(password).digest('hex')
 }
 
 // Helper function to handle CORS
