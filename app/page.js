@@ -6,11 +6,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
-import { MapPin, Mail, Phone, Calendar, Star, StarOff, Send, FileText, Search, Filter, Eye, Heart, MessageSquare } from 'lucide-react'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Checkbox } from '@/components/ui/checkbox'
+import { 
+  MapPin, Mail, Phone, Calendar, Star, StarOff, Send, FileText, Search, Filter, Eye, Heart, MessageSquare, 
+  Home, Users, Trash2, Settings, Bell, Plus, Edit, Building, TreePine, AlertTriangle
+} from 'lucide-react'
 
 export default function App() {
   const [leads, setLeads] = useState([])
@@ -21,10 +25,11 @@ export default function App() {
   const [municipalityFilter, setMunicipalityFilter] = useState('all')
   const [savedLeads, setSavedLeads] = useState([])
   const [prospectionLeads, setProspectionLeads] = useState([])
-  const [activeTab, setActiveTab] = useState('dashboard')
+  const [activeSection, setActiveSection] = useState('inbox')
   const [isDetailOpen, setIsDetailOpen] = useState(false)
   const [emailContent, setEmailContent] = useState('')
   const [contactHistory, setContactHistory] = useState([])
+  const [selectedLeads, setSelectedLeads] = useState([])
 
   // Mock data for leads
   const mockLeads = [
