@@ -35,16 +35,19 @@ export default function App() {
   const mockLeads = [
     {
       id: '1',
-      title: 'Environmental Permit - New Construction',
+      title: 'New Construction Project',
       category: 'environmental',
+      phase: 'Design',
       type: 'New Building',
       address: '123 Oak Street, Downtown',
       municipality: 'Vancouver',
+      region: 'BC-West',
       owner: 'John Smith',
       email: 'john.smith@email.com',
       phone: '+1 (555) 123-4567',
-      description: 'New 3-story residential building with underground parking and green roof system.',
+      description: 'New 4-story apartment building with underground parking. Eco-friendly design with solar panels and green roof system.',
       applicationDate: '2024-06-15',
+      publicationDate: '2024-06-20',
       projectValue: '$2.5M',
       status: 'Under Review',
       architect: 'Green Design Associates',
@@ -52,33 +55,39 @@ export default function App() {
     },
     {
       id: '2',
-      title: 'Uninhabitable Dwelling - Renovation Required',
+      title: 'Heritage Building Restoration',
       category: 'uninhabitable',
+      phase: 'Design',
       type: 'Renovation',
-      address: '456 Pine Avenue, Eastside',
+      address: '456 Pine Avenue, Historic District',
       municipality: 'Vancouver',
-      owner: 'Sarah Johnson',
-      email: 'sarah.j@email.com',
+      region: 'BC-Central',
+      owner: 'HERITAGE INVEST',
+      email: 'projects@heritage-invest.com',
       phone: '+1 (555) 987-6543',
-      description: 'Historic home requiring extensive renovation, structural repairs, and modernization.',
+      description: 'Complete renovation of historic 1920s building. Restoration of original facade with modern interior updates.',
       applicationDate: '2024-06-10',
-      projectValue: '$450K',
+      publicationDate: '2024-06-18',
+      projectValue: '$1.8M',
       status: 'Approved',
       architect: 'Heritage Restorations',
-      contractor: null
+      contractor: 'Classic Builders'
     },
     {
       id: '3',
-      title: 'Environmental Permit - Industrial Site',
+      title: 'Industrial Facility Expansion',
       category: 'environmental',
-      type: 'Industrial',
+      phase: 'Design',
+      type: 'New Building, Demolition',
       address: '789 Industrial Way, Port Area',
       municipality: 'Richmond',
-      owner: 'TechCorp Industries',
-      email: 'permits@techcorp.com',
+      region: 'BC-South',
+      owner: 'AEF Construct',
+      email: 'permits@aef-construct.com',
       phone: '+1 (555) 555-0123',
-      description: 'New manufacturing facility with environmental compliance requirements.',
+      description: 'Expansion of existing manufacturing facility with new production line and waste management systems.',
       applicationDate: '2024-06-12',
+      publicationDate: '2024-06-22',
       projectValue: '$5.2M',
       status: 'In Progress',
       architect: 'Industrial Design Solutions',
@@ -86,20 +95,23 @@ export default function App() {
     },
     {
       id: '4',
-      title: 'Uninhabitable Dwelling - Fire Damage',
-      category: 'uninhabitable',
-      type: 'Restoration',
+      title: 'Residential Complex Development',
+      category: 'environmental',
+      phase: 'Design',
+      type: 'New Building',
       address: '321 Maple Road, Westside',
       municipality: 'Burnaby',
-      owner: 'Michael Brown',
-      email: 'mbrown@email.com',
+      region: 'BC-East',
+      owner: 'PEETERS-INVEST',
+      email: 'development@peeters-invest.com',
       phone: '+1 (555) 444-7890',
-      description: 'Single-family home requiring complete restoration after fire damage.',
+      description: 'Development of 20 residential units with integrated community spaces and sustainable infrastructure.',
       applicationDate: '2024-06-08',
-      projectValue: '$650K',
+      publicationDate: '2024-06-16',
+      projectValue: '$8.5M',
       status: 'Pending',
-      architect: 'Phoenix Restoration',
-      contractor: null
+      architect: 'Urban Planning Group',
+      contractor: 'Residential Builders Ltd'
     }
   ]
 
@@ -177,14 +189,14 @@ export default function App() {
     alert('Postal mail scheduled for delivery!')
   }
 
-  const getCategoryColor = (category) => {
+  const getCategoryIcon = (category) => {
     switch (category) {
       case 'environmental':
-        return 'bg-green-100 text-green-800'
+        return <TreePine className="h-4 w-4 text-green-600" />
       case 'uninhabitable':
-        return 'bg-orange-100 text-orange-800'
+        return <AlertTriangle className="h-4 w-4 text-orange-600" />
       default:
-        return 'bg-gray-100 text-gray-800'
+        return <Building className="h-4 w-4 text-blue-600" />
     }
   }
 
@@ -203,264 +215,278 @@ export default function App() {
     }
   }
 
+  const getDataForSection = () => {
+    switch (activeSection) {
+      case 'favorites':
+        return leads.filter(lead => savedLeads.includes(lead.id))
+      case 'prospection':
+        return leads.filter(lead => prospectionLeads.includes(lead.id))
+      case 'trash':
+        return []
+      default:
+        return filteredLeads
+    }
+  }
+
   const municipalities = [...new Set(leads.map(lead => lead.municipality))]
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Lead Management Portal</h1>
-              <p className="text-muted-foreground">Manage and track your project leads</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Badge variant="outline" className="flex items-center gap-2">
-                <Heart className="h-4 w-4" />
-                {savedLeads.length} Saved
-              </Badge>
-              <Badge variant="outline" className="flex items-center gap-2">
-                <MessageSquare className="h-4 w-4" />
-                {prospectionLeads.length} Prospection
-              </Badge>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar */}
+      <div className="w-64 bg-blue-900 text-white flex flex-col">
+        <div className="p-4">
+          <h1 className="text-xl font-bold">Lead Portal</h1>
+        </div>
+        
+        <nav className="flex-1 px-2 py-4 space-y-2">
+          <button
+            onClick={() => setActiveSection('inbox')}
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
+              activeSection === 'inbox' ? 'bg-blue-800 text-white' : 'text-blue-100 hover:bg-blue-800'
+            }`}
+          >
+            <Home className="h-4 w-4" />
+            Inbox
+          </button>
+          
+          <button
+            onClick={() => setActiveSection('favorites')}
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
+              activeSection === 'favorites' ? 'bg-blue-800 text-white' : 'text-blue-100 hover:bg-blue-800'
+            }`}
+          >
+            <Star className="h-4 w-4" />
+            Favorites
+          </button>
+          
+          <div className="pt-4">
+            <h3 className="px-3 text-xs font-semibold text-blue-300 uppercase tracking-wider">
+              Search Profiles
+            </h3>
+            <div className="mt-2 space-y-1">
+              <div className="px-3 py-2 text-sm text-blue-200">
+                No search profiles saved
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+          
+          <div className="pt-4">
+            <h3 className="px-3 text-xs font-semibold text-blue-300 uppercase tracking-wider">
+              My Search Tasks
+            </h3>
+            <div className="mt-2 space-y-1">
+              <div className="px-3 py-2 text-sm text-blue-200">
+                No search tasks saved
+              </div>
+            </div>
+          </div>
+          
+          <button
+            onClick={() => setActiveSection('prospection')}
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
+              activeSection === 'prospection' ? 'bg-green-600 text-white' : 'text-green-200 hover:bg-green-600'
+            }`}
+          >
+            <MessageSquare className="h-4 w-4" />
+            <div>
+              <div className="font-medium">Prospection</div>
+              <div className="text-xs">email</div>
+              <div className="text-xs">postal</div>
+            </div>
+          </button>
+          
+          <button
+            onClick={() => setActiveSection('trash')}
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
+              activeSection === 'trash' ? 'bg-red-600 text-white' : 'text-red-200 hover:bg-red-600'
+            }`}
+          >
+            <Trash2 className="h-4 w-4" />
+            Trash
+          </button>
+        </nav>
+      </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="saved">Saved ({savedLeads.length})</TabsTrigger>
-            <TabsTrigger value="prospection">Prospection ({prospectionLeads.length})</TabsTrigger>
-            <TabsTrigger value="history">Contact History</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="dashboard" className="space-y-6">
-            {/* Filters */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Filter className="h-5 w-5" />
-                  Filters & Search
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search leads..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                  <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="All Categories" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
-                      <SelectItem value="environmental">Environmental Permits</SelectItem>
-                      <SelectItem value="uninhabitable">Uninhabitable Dwellings</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select value={municipalityFilter} onValueChange={setMunicipalityFilter}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="All Municipalities" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Municipalities</SelectItem>
-                      {municipalities.map(municipality => (
-                        <SelectItem key={municipality} value={municipality}>
-                          {municipality}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button 
-                    variant="outline"
-                    onClick={() => {
-                      setSearchTerm('')
-                      setCategoryFilter('all')
-                      setMunicipalityFilter('all')
-                    }}
-                  >
-                    Clear Filters
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Leads Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredLeads.map(lead => (
-                <Card key={lead.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <CardTitle className="text-lg">{lead.title}</CardTitle>
-                        <CardDescription className="flex items-center gap-1 mt-1">
-                          <MapPin className="h-4 w-4" />
-                          {lead.address}
-                        </CardDescription>
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <Button
-                          variant={savedLeads.includes(lead.id) ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => handleSaveLead(lead.id)}
-                        >
-                          {savedLeads.includes(lead.id) ? <Star className="h-4 w-4 fill-current" /> : <StarOff className="h-4 w-4" />}
-                        </Button>
-                        <Button
-                          variant={prospectionLeads.includes(lead.id) ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => handleProspectionLead(lead.id)}
-                        >
-                          <MessageSquare className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex flex-wrap gap-2">
-                        <Badge className={getCategoryColor(lead.category)}>
-                          {lead.category === 'environmental' ? 'Environmental' : 'Uninhabitable'}
-                        </Badge>
-                        <Badge variant="outline">{lead.type}</Badge>
-                        <Badge className={getStatusColor(lead.status)}>{lead.status}</Badge>
-                      </div>
-                      
-                      <div className="space-y-2 text-sm">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                          <span>{new Date(lead.applicationDate).toLocaleDateString()}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">Owner:</span>
-                          <span>{lead.owner}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">Value:</span>
-                          <span>{lead.projectValue}</span>
-                        </div>
-                      </div>
-                      
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {lead.description}
-                      </p>
-                      
-                      <div className="pt-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedLead(lead)
-                            setIsDetailOpen(true)
-                          }}
-                          className="w-full"
-                        >
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Details
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <header className="bg-white border-b border-gray-200 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <h2 className="text-2xl font-semibold text-gray-900">
+                {activeSection === 'inbox' ? 'Building Projects' : 
+                 activeSection === 'favorites' ? 'Favorite Projects' :
+                 activeSection === 'prospection' ? 'Prospection List' : 'Trash'}
+              </h2>
             </div>
+            <div className="flex items-center gap-4">
+              <Bell className="h-5 w-5 text-gray-500" />
+              <div className="text-sm text-gray-500">
+                {getDataForSection().length} projects
+              </div>
+            </div>
+          </div>
+        </header>
 
-            {filteredLeads.length === 0 && (
-              <Card>
-                <CardContent className="text-center py-8">
-                  <p className="text-muted-foreground">No leads found matching your criteria.</p>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
+        {/* Search and Filters */}
+        <div className="bg-white border-b border-gray-200 px-6 py-4">
+          <div className="flex items-center gap-4">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search projects, addresses, owners..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="environmental">Environmental</SelectItem>
+                <SelectItem value="uninhabitable">Uninhabitable</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select value={municipalityFilter} onValueChange={setMunicipalityFilter}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="All Regions" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Regions</SelectItem>
+                {municipalities.map(municipality => (
+                  <SelectItem key={municipality} value={municipality}>
+                    {municipality}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <Button variant="outline" size="sm">
+              <Filter className="h-4 w-4 mr-2" />
+              Filter
+            </Button>
+          </div>
+        </div>
 
-          <TabsContent value="saved">
-            <Card>
-              <CardHeader>
-                <CardTitle>Saved Leads</CardTitle>
-                <CardDescription>Leads you've marked as favorites</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {leads.filter(lead => savedLeads.includes(lead.id)).map(lead => (
-                    <Card key={lead.id} className="p-4">
-                      <h4 className="font-medium">{lead.title}</h4>
-                      <p className="text-sm text-muted-foreground">{lead.address}</p>
-                      <Badge className={getCategoryColor(lead.category)} size="sm">
-                        {lead.category}
-                      </Badge>
-                    </Card>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="prospection">
-            <Card>
-              <CardHeader>
-                <CardTitle>Prospection List</CardTitle>
-                <CardDescription>Leads you're actively pursuing</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {leads.filter(lead => prospectionLeads.includes(lead.id)).map(lead => (
-                    <Card key={lead.id} className="p-4">
-                      <h4 className="font-medium">{lead.title}</h4>
-                      <p className="text-sm text-muted-foreground">{lead.address}</p>
-                      <p className="text-sm text-muted-foreground">{lead.owner}</p>
-                      <Badge className={getCategoryColor(lead.category)} size="sm">
-                        {lead.category}
-                      </Badge>
-                    </Card>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="history">
-            <Card>
-              <CardHeader>
-                <CardTitle>Contact History</CardTitle>
-                <CardDescription>Record of all your communications</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {contactHistory.map(record => (
-                    <div key={record.id} className="border rounded-lg p-4">
-                      <div className="flex items-center justify-between">
+        {/* Content Area */}
+        <div className="flex-1 p-6">
+          {activeSection === 'inbox' || activeSection === 'favorites' || activeSection === 'prospection' ? (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-50">
+                    <TableHead className="w-12">
+                      <Checkbox />
+                    </TableHead>
+                    <TableHead>Phase</TableHead>
+                    <TableHead>Project Type</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Region</TableHead>
+                    <TableHead>Start Date</TableHead>
+                    <TableHead>Publication Date</TableHead>
+                    <TableHead className="w-12"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {getDataForSection().map((lead) => (
+                    <TableRow key={lead.id} className="hover:bg-gray-50">
+                      <TableCell>
+                        <Checkbox />
+                      </TableCell>
+                      <TableCell>
                         <div className="flex items-center gap-2">
-                          {record.type === 'email' ? <Mail className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
-                          <span className="font-medium">{record.type === 'email' ? 'Email' : 'Postal Mail'}</span>
+                          {getCategoryIcon(lead.category)}
+                          {lead.phase}
                         </div>
-                        <span className="text-sm text-muted-foreground">
-                          {new Date(record.timestamp).toLocaleString()}
-                        </span>
-                      </div>
-                      <p className="text-sm mt-2">To: {record.recipient}</p>
-                      <Badge variant="outline" className="mt-2">{record.status}</Badge>
-                    </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-medium text-blue-600">{lead.type}</div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="max-w-md">
+                          <div className="font-medium text-gray-900">{lead.owner}</div>
+                          <div className="text-sm text-gray-600 truncate">{lead.description}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          <div>{lead.region}</div>
+                          <div className="text-gray-500">{lead.municipality}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm text-gray-600">
+                          {new Date(lead.applicationDate).toLocaleDateString()}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm text-gray-600">
+                          {new Date(lead.publicationDate).toLocaleDateString()}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleSaveLead(lead.id)}
+                            className="h-8 w-8 p-0"
+                          >
+                            {savedLeads.includes(lead.id) ? (
+                              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                            ) : (
+                              <StarOff className="h-4 w-4 text-gray-400" />
+                            )}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleProspectionLead(lead.id)}
+                            className="h-8 w-8 p-0"
+                          >
+                            <MessageSquare className={`h-4 w-4 ${
+                              prospectionLeads.includes(lead.id) ? 'text-green-600' : 'text-gray-400'
+                            }`} />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedLead(lead)
+                              setIsDetailOpen(true)
+                            }}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Eye className="h-4 w-4 text-gray-400" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                  {contactHistory.length === 0 && (
-                    <p className="text-muted-foreground text-center py-8">No contact history yet.</p>
-                  )}
+                </TableBody>
+              </Table>
+              
+              {getDataForSection().length === 0 && (
+                <div className="text-center py-12 text-gray-500">
+                  <Building className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <p>No projects found in this section.</p>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+              )}
+            </div>
+          ) : (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+              <div className="text-center text-gray-500">
+                <Trash2 className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <p>Trash is empty.</p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Lead Detail Modal */}
@@ -469,106 +495,123 @@ export default function App() {
           {selectedLead && (
             <>
               <DialogHeader>
-                <DialogTitle>{selectedLead.title}</DialogTitle>
+                <DialogTitle className="flex items-center gap-2">
+                  {getCategoryIcon(selectedLead.category)}
+                  {selectedLead.title}
+                </DialogTitle>
                 <DialogDescription>
-                  Detailed information about this lead
+                  {selectedLead.address} • {selectedLead.municipality}
                 </DialogDescription>
               </DialogHeader>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div>
-                    <h4 className="font-medium mb-2">Project Details</h4>
+                    <h4 className="font-medium mb-3 text-gray-900">Project Details</h4>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span>Type:</span>
-                        <span>{selectedLead.type}</span>
+                        <span className="text-gray-600">Type:</span>
+                        <span className="font-medium">{selectedLead.type}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Status:</span>
+                        <span className="text-gray-600">Phase:</span>
+                        <span className="font-medium">{selectedLead.phase}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Status:</span>
                         <Badge className={getStatusColor(selectedLead.status)}>{selectedLead.status}</Badge>
                       </div>
                       <div className="flex justify-between">
-                        <span>Value:</span>
-                        <span>{selectedLead.projectValue}</span>
+                        <span className="text-gray-600">Project Value:</span>
+                        <span className="font-medium">{selectedLead.projectValue}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Application Date:</span>
+                        <span className="text-gray-600">Application Date:</span>
                         <span>{new Date(selectedLead.applicationDate).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Publication Date:</span>
+                        <span>{new Date(selectedLead.publicationDate).toLocaleDateString()}</span>
                       </div>
                     </div>
                   </div>
 
                   <div>
-                    <h4 className="font-medium mb-2">Location</h4>
+                    <h4 className="font-medium mb-3 text-gray-900">Location</h4>
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4" />
+                        <MapPin className="h-4 w-4 text-gray-400" />
                         <span>{selectedLead.address}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Municipality:</span>
+                        <span className="text-gray-600">Municipality:</span>
                         <span>{selectedLead.municipality}</span>
                       </div>
-                      <Button variant="outline" size="sm" className="w-full mt-2">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Region:</span>
+                        <span>{selectedLead.region}</span>
+                      </div>
+                      <Button variant="outline" size="sm" className="w-full mt-3">
+                        <MapPin className="h-4 w-4 mr-2" />
                         View on Google Street View
                       </Button>
                     </div>
                   </div>
 
                   <div>
-                    <h4 className="font-medium mb-2">Description</h4>
-                    <p className="text-sm text-muted-foreground">{selectedLead.description}</p>
+                    <h4 className="font-medium mb-3 text-gray-900">Description</h4>
+                    <p className="text-sm text-gray-700 leading-relaxed">{selectedLead.description}</p>
                   </div>
                 </div>
 
                 <div className="space-y-4">
                   <div>
-                    <h4 className="font-medium mb-2">Contact Information</h4>
+                    <h4 className="font-medium mb-3 text-gray-900">Contact Information</h4>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span>Owner:</span>
-                        <span>{selectedLead.owner}</span>
+                        <span className="text-gray-600">Owner:</span>
+                        <span className="font-medium">{selectedLead.owner}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Mail className="h-4 w-4" />
+                        <Mail className="h-4 w-4 text-gray-400" />
                         <span>{selectedLead.email}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4" />
+                        <Phone className="h-4 w-4 text-gray-400" />
                         <span>{selectedLead.phone}</span>
                       </div>
                     </div>
                   </div>
 
                   <div>
-                    <h4 className="font-medium mb-2">Team</h4>
+                    <h4 className="font-medium mb-3 text-gray-900">Project Team</h4>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span>Architect:</span>
+                        <span className="text-gray-600">Architect:</span>
                         <span>{selectedLead.architect || 'Not assigned'}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Contractor:</span>
+                        <span className="text-gray-600">Contractor:</span>
                         <span>{selectedLead.contractor || 'Not assigned'}</span>
                       </div>
                     </div>
                   </div>
 
                   <div>
-                    <h4 className="font-medium mb-2">Contact Actions</h4>
+                    <h4 className="font-medium mb-3 text-gray-900">Contact Actions</h4>
                     <div className="space-y-4">
                       <div>
-                        <Label htmlFor="email-content">Email Message</Label>
+                        <Label htmlFor="email-content" className="text-sm font-medium">Email Message</Label>
                         <Textarea
                           id="email-content"
                           placeholder="Write your message here..."
                           value={emailContent}
                           onChange={(e) => setEmailContent(e.target.value)}
                           className="mt-2"
+                          rows={3}
                         />
                         <Button 
-                          className="w-full mt-2"
+                          className="w-full mt-3"
                           onClick={() => handleSendEmail(selectedLead)}
                           disabled={!emailContent.trim()}
                         >
