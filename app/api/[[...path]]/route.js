@@ -8,135 +8,154 @@ let client
 let db
 
 async function connectToMongo() {
-  if (!client) {
-    client = new MongoClient(process.env.MONGO_URL)
-    await client.connect()
-    db = client.db(process.env.DB_NAME)
+  try {
+    if (!client || !client.topology || !client.topology.isConnected()) {
+      console.log('Connecting to MongoDB...')
+      client = new MongoClient(process.env.MONGO_URL, {
+        maxPoolSize: 10,
+        serverSelectionTimeoutMS: 5000,
+        socketTimeoutMS: 45000,
+      })
+      await client.connect()
+      db = client.db(process.env.DB_NAME)
+      console.log('MongoDB connected successfully')
+    }
+    return db
+  } catch (error) {
+    console.error('MongoDB connection error:', error)
+    throw new Error(`Failed to connect to MongoDB: ${error.message}`)
   }
-  return db
 }
 
 // Initialize admin user and default data
 async function initializeAdminUser() {
-  const db = await connectToMongo()
-  
-  // Check if admin user exists
-  const adminUser = await db.collection('admin_users').findOne({ email: 'admin@gmail.com' })
-  
-  if (!adminUser) {
-    // Create admin user
-    const hashedPassword = crypto.createHash('sha256').update('12345678').digest('hex')
+  try {
+    const db = await connectToMongo()
     
-    await db.collection('admin_users').insertOne({
-      id: uuidv4(),
-      email: 'admin@gmail.com',
-      password: hashedPassword,
-      role: 'admin',
-      createdAt: new Date(),
-      updatedAt: new Date()
-    })
+    // Check if admin user exists
+    const adminUser = await db.collection('admin_users').findOne({ email: 'admin@gmail.com' })
     
-    console.log('Admin user created: admin@gmail.com / 12345678')
-  }
-
-  // Initialize default municipalities
-  const defaultMunicipalities = [
-    'Vancouver', 'Richmond', 'Burnaby', 'Surrey', 'Coquitlam', 
-    'New Westminster', 'Delta', 'Langley', 'Maple Ridge', 
-    'Port Coquitlam', 'Port Moody', 'White Rock'
-  ]
-  
-  for (const municipalityName of defaultMunicipalities) {
-    const existingMunicipality = await db.collection('municipalities').findOne({ name: municipalityName })
-    if (!existingMunicipality) {
-      await db.collection('municipalities').insertOne({
+    if (!adminUser) {
+      // Create admin user
+      const hashedPassword = crypto.createHash('sha256').update('12345678').digest('hex')
+      
+      await db.collection('admin_users').insertOne({
         id: uuidv4(),
-        name: municipalityName,
+        email: 'admin@gmail.com',
+        password: hashedPassword,
+        role: 'admin',
         createdAt: new Date(),
         updatedAt: new Date()
       })
+      
+      console.log('Admin user created: admin@gmail.com / 12345678')
     }
-  }
 
-  // Initialize default regions
-  const defaultRegions = [
-    'BC-West', 'BC-Central', 'BC-South', 'BC-East', 'BC-North', 'BC-Island', 'BC-Interior'
-  ]
-  
-  for (const regionName of defaultRegions) {
-    const existingRegion = await db.collection('regions').findOne({ name: regionName })
-    if (!existingRegion) {
-      await db.collection('regions').insertOne({
-        id: uuidv4(),
-        name: regionName,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      })
+    // Initialize default categories
+    const defaultCategories = [
+      'Residential', 'Commercial', 'Industrial', 'Institutional', 'Infrastructure', 'Landscaping', 'Interior Fit-out', 'environmental', 'uninhabitable'
+    ]
+    
+    for (const categoryName of defaultCategories) {
+      const existing = await db.collection('categories').findOne({ name: categoryName })
+      if (!existing) {
+        await db.collection('categories').insertOne({
+          id: uuidv4(),
+          name: categoryName,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+      }
     }
-  }
 
-  // Initialize default phases
-  const defaultPhases = [
-    'Design', 'Planning', 'Permitting', 'Construction', 'Completion', 'Maintenance'
-  ]
-  for (const phaseName of defaultPhases) {
-    const existing = await db.collection('phases').findOne({ name: phaseName })
-    if (!existing) {
-      await db.collection('phases').insertOne({
-        id: uuidv4(),
-        name: phaseName,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      })
+    // Initialize default phases
+    const defaultPhases = [
+      'Design', 'Planning', 'Permitting', 'Construction', 'Completion', 'Maintenance'
+    ]
+    for (const phaseName of defaultPhases) {
+      const existing = await db.collection('phases').findOne({ name: phaseName })
+      if (!existing) {
+        await db.collection('phases').insertOne({
+          id: uuidv4(),
+          name: phaseName,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+      }
     }
-  }
 
-  // Initialize default project types
-  const defaultProjectTypes = [
-    'New Building', 'Renovation', 'Demolition', 'Addition', 'Infrastructure', 'Landscaping', 'Interior Fit-out'
-  ]
-  for (const typeName of defaultProjectTypes) {
-    const existing = await db.collection('project_types').findOne({ name: typeName })
-    if (!existing) {
-      await db.collection('project_types').insertOne({
-        id: uuidv4(),
-        name: typeName,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      })
+    // Initialize default project types
+    const defaultProjectTypes = [
+      'New Building', 'Renovation', 'Demolition', 'Addition', 'Infrastructure', 'Landscaping', 'Interior Fit-out'
+    ]
+    for (const typeName of defaultProjectTypes) {
+      const existing = await db.collection('project_types').findOne({ name: typeName })
+      if (!existing) {
+        await db.collection('project_types').insertOne({
+          id: uuidv4(),
+          name: typeName,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+      }
     }
-  }
 
-  // Initialize default statuses
-  const defaultStatuses = [
-    'Pending', 'Under Review', 'In Progress', 'Approved'
-  ]
-  for (const statusName of defaultStatuses) {
-    const existing = await db.collection('statuses').findOne({ name: statusName })
-    if (!existing) {
-      await db.collection('statuses').insertOne({
-        id: uuidv4(),
-        name: statusName,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      })
+    // Initialize default statuses
+    const defaultStatuses = [
+      'Pending', 'Under Review', 'In Progress', 'Approved'
+    ]
+    for (const statusName of defaultStatuses) {
+      const existing = await db.collection('statuses').findOne({ name: statusName })
+      if (!existing) {
+        await db.collection('statuses').insertOne({
+          id: uuidv4(),
+          name: statusName,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+      }
     }
-  }
 
-  // Initialize default categories
-  const defaultCategories = [
-    'Residential', 'Commercial', 'Industrial', 'Institutional', 'Infrastructure', 'Landscaping', 'Interior Fit-out', 'environmental', 'uninhabitable'
-  ]
-  for (const categoryName of defaultCategories) {
-    const existing = await db.collection('categories').findOne({ name: categoryName })
-    if (!existing) {
-      await db.collection('categories').insertOne({
-        id: uuidv4(),
-        name: categoryName,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      })
+    // Initialize default municipalities
+    const defaultMunicipalities = [
+      'Vancouver', 'Richmond', 'Burnaby', 'Surrey', 'Coquitlam', 
+      'New Westminster', 'Delta', 'Langley', 'Maple Ridge', 
+      'Port Coquitlam', 'Port Moody', 'White Rock'
+    ]
+    
+    for (const municipalityName of defaultMunicipalities) {
+      const existing = await db.collection('municipalities').findOne({ name: municipalityName })
+      if (!existing) {
+        await db.collection('municipalities').insertOne({
+          id: uuidv4(),
+          name: municipalityName,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+      }
     }
+
+    // Initialize default regions
+    const defaultRegions = [
+      'BC-West', 'BC-Central', 'BC-South', 'BC-East', 'BC-North', 'BC-Island', 'BC-Interior'
+    ]
+    
+    for (const regionName of defaultRegions) {
+      const existing = await db.collection('regions').findOne({ name: regionName })
+      if (!existing) {
+        await db.collection('regions').insertOne({
+          id: uuidv4(),
+          name: regionName,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+      }
+    }
+    
+    console.log('Database initialization completed')
+  } catch (error) {
+    console.error('Database initialization error:', error)
+    throw error
   }
 }
 
@@ -195,7 +214,11 @@ async function handleRoute(request, { params }) {
   const method = request.method
 
   try {
+    // Ensure database connection is established
     const db = await connectToMongo()
+    if (!db) {
+      throw new Error('Failed to establish database connection')
+    }
 
     // Authentication endpoints
     if (route === '/auth/login' && method === 'POST') {
