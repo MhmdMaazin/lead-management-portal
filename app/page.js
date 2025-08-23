@@ -13,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Checkbox } from '@/components/ui/checkbox'
 import { 
   MapPin, Mail, Phone, Calendar, Star, StarOff, Send, FileText, Search, Filter, Eye, Heart, MessageSquare, 
-  Home, Users, Trash2, Settings, Bell, Plus, Edit, Building, TreePine, AlertTriangle
+  Home, Users, Trash2, Settings, Bell, Plus, Edit, Building, TreePine, AlertTriangle, Factory, GraduationCap, Road, Paintbrush
 } from 'lucide-react'
 
 export default function App() {
@@ -214,6 +214,20 @@ export default function App() {
         return <TreePine className="h-4 w-4 text-green-600" />
       case 'uninhabitable':
         return <AlertTriangle className="h-4 w-4 text-orange-600" />
+      case 'Residential':
+        return <Home className="h-4 w-4 text-blue-600" />
+      case 'Commercial':
+        return <Building className="h-4 w-4 text-purple-600" />
+      case 'Industrial':
+        return <Factory className="h-4 w-4 text-gray-600" />
+      case 'Institutional':
+        return <GraduationCap className="h-4 w-4 text-indigo-600" />
+      case 'Infrastructure':
+        return <Road className="h-4 w-4 text-yellow-600" />
+      case 'Landscaping':
+        return <TreePine className="h-4 w-4 text-green-600" />
+      case 'Interior Fit-out':
+        return <Paintbrush className="h-4 w-4 text-pink-600" />
       default:
         return <Building className="h-4 w-4 text-blue-600" />
     }
@@ -402,6 +416,7 @@ export default function App() {
                     <TableHead className="w-12">
                       <Checkbox />
                     </TableHead>
+                    <TableHead>Category</TableHead>
                     <TableHead>Phase</TableHead>
                     <TableHead>Project Type</TableHead>
                     <TableHead>Description</TableHead>
@@ -420,6 +435,13 @@ export default function App() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {getCategoryIcon(lead.category)}
+                          {lead.category}
+                          {/* {lead.phase} */}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {/* {getCategoryIcon(lead.category)} */}
                           {lead.phase}
                         </div>
                       </TableCell>
@@ -570,10 +592,26 @@ export default function App() {
                         <span className="text-gray-600">Region:</span>
                         <span>{selectedLead.region}</span>
                       </div>
-                      <Button variant="outline" size="sm" className="w-full mt-3">
-                        <MapPin className="h-4 w-4 mr-2" />
-                        View on Google Street View
-                      </Button>
+                    </div>
+                    
+                    {/* Google Maps iframe */}
+                    <div className="mt-4">
+                      <div className="w-full h-48 rounded-lg overflow-hidden border border-gray-200">
+                        <iframe
+                          width="100%"
+                          height="100%"
+                          frameBorder="0"
+                          style={{ border: 0 }}
+                          src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${encodeURIComponent(selectedLead.address + ', ' + selectedLead.municipality + ', ' + selectedLead.region)}`}
+                          allowFullScreen
+                          loading="lazy"
+                          referrerPolicy="no-referrer-when-downgrade"
+                          title={`Map of ${selectedLead.address}`}
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2 text-center">
+                        Interactive map powered by Google Maps
+                      </p>
                     </div>
                   </div>
 

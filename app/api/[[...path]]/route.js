@@ -16,7 +16,7 @@ async function connectToMongo() {
   return db
 }
 
-// Initialize admin user
+// Initialize admin user and default data
 async function initializeAdminUser() {
   const db = await connectToMongo()
   
@@ -37,6 +37,106 @@ async function initializeAdminUser() {
     })
     
     console.log('Admin user created: admin@gmail.com / 12345678')
+  }
+
+  // Initialize default municipalities
+  const defaultMunicipalities = [
+    'Vancouver', 'Richmond', 'Burnaby', 'Surrey', 'Coquitlam', 
+    'New Westminster', 'Delta', 'Langley', 'Maple Ridge', 
+    'Port Coquitlam', 'Port Moody', 'White Rock'
+  ]
+  
+  for (const municipalityName of defaultMunicipalities) {
+    const existingMunicipality = await db.collection('municipalities').findOne({ name: municipalityName })
+    if (!existingMunicipality) {
+      await db.collection('municipalities').insertOne({
+        id: uuidv4(),
+        name: municipalityName,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+    }
+  }
+
+  // Initialize default regions
+  const defaultRegions = [
+    'BC-West', 'BC-Central', 'BC-South', 'BC-East', 'BC-North', 'BC-Island', 'BC-Interior'
+  ]
+  
+  for (const regionName of defaultRegions) {
+    const existingRegion = await db.collection('regions').findOne({ name: regionName })
+    if (!existingRegion) {
+      await db.collection('regions').insertOne({
+        id: uuidv4(),
+        name: regionName,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+    }
+  }
+
+  // Initialize default phases
+  const defaultPhases = [
+    'Design', 'Planning', 'Permitting', 'Construction', 'Completion', 'Maintenance'
+  ]
+  for (const phaseName of defaultPhases) {
+    const existing = await db.collection('phases').findOne({ name: phaseName })
+    if (!existing) {
+      await db.collection('phases').insertOne({
+        id: uuidv4(),
+        name: phaseName,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+    }
+  }
+
+  // Initialize default project types
+  const defaultProjectTypes = [
+    'New Building', 'Renovation', 'Demolition', 'Addition', 'Infrastructure', 'Landscaping', 'Interior Fit-out'
+  ]
+  for (const typeName of defaultProjectTypes) {
+    const existing = await db.collection('project_types').findOne({ name: typeName })
+    if (!existing) {
+      await db.collection('project_types').insertOne({
+        id: uuidv4(),
+        name: typeName,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+    }
+  }
+
+  // Initialize default statuses
+  const defaultStatuses = [
+    'Pending', 'Under Review', 'In Progress', 'Approved'
+  ]
+  for (const statusName of defaultStatuses) {
+    const existing = await db.collection('statuses').findOne({ name: statusName })
+    if (!existing) {
+      await db.collection('statuses').insertOne({
+        id: uuidv4(),
+        name: statusName,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+    }
+  }
+
+  // Initialize default categories
+  const defaultCategories = [
+    'Residential', 'Commercial', 'Industrial', 'Institutional', 'Infrastructure', 'Landscaping', 'Interior Fit-out', 'environmental', 'uninhabitable'
+  ]
+  for (const categoryName of defaultCategories) {
+    const existing = await db.collection('categories').findOne({ name: categoryName })
+    if (!existing) {
+      await db.collection('categories').insertOne({
+        id: uuidv4(),
+        name: categoryName,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+    }
   }
 }
 
@@ -415,6 +515,282 @@ async function handleRoute(request, { params }) {
       await db.collection('postal_mail').insertOne(mailRecord)
       const { _id, ...cleanedMailRecord } = mailRecord
       return handleCORS(NextResponse.json(cleanedMailRecord))
+    }
+
+    // Phases endpoints
+    if (route === '/phases' && method === 'GET') {
+      const phases = await db.collection('phases')
+        .find({})
+        .sort({ name: 1 })
+        .toArray()
+      const cleanedPhases = phases.map(({ _id, ...rest }) => rest)
+      return handleCORS(NextResponse.json(cleanedPhases))
+    }
+    if (route === '/phases' && method === 'POST') {
+      const body = await request.json()
+      if (!body.name || !body.name.trim()) {
+        return handleCORS(NextResponse.json(
+          { error: "Phase name is required" },
+          { status: 400 }
+        ))
+      }
+      const existing = await db.collection('phases').findOne({ name: body.name.trim() })
+      if (existing) {
+        return handleCORS(NextResponse.json(
+          { error: "Phase already exists" },
+          { status: 409 }
+        ))
+      }
+      const phase = {
+        id: uuidv4(),
+        name: body.name.trim(),
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+      await db.collection('phases').insertOne(phase)
+      const { _id, ...cleaned } = phase
+      return handleCORS(NextResponse.json(cleaned))
+    }
+    if (route.startsWith('/phases/') && method === 'DELETE') {
+      const phaseId = route.split('/')[2]
+      const deleteResult = await db.collection('phases').deleteOne({ id: phaseId })
+      if (deleteResult.deletedCount === 0) {
+        return handleCORS(NextResponse.json(
+          { error: "Phase not found" },
+          { status: 404 }
+        ))
+      }
+      return handleCORS(NextResponse.json({ message: "Phase deleted successfully" }))
+    }
+
+    // Project Types endpoints
+    if (route === '/project-types' && method === 'GET') {
+      const projectTypes = await db.collection('project_types')
+        .find({})
+        .sort({ name: 1 })
+        .toArray()
+      const cleanedProjectTypes = projectTypes.map(({ _id, ...rest }) => rest)
+      return handleCORS(NextResponse.json(cleanedProjectTypes))
+    }
+    if (route === '/project-types' && method === 'POST') {
+      const body = await request.json()
+      if (!body.name || !body.name.trim()) {
+        return handleCORS(NextResponse.json(
+          { error: "Project type name is required" },
+          { status: 400 }
+        ))
+      }
+      const existing = await db.collection('project_types').findOne({ name: body.name.trim() })
+      if (existing) {
+        return handleCORS(NextResponse.json(
+          { error: "Project type already exists" },
+          { status: 409 }
+        ))
+      }
+      const projectType = {
+        id: uuidv4(),
+        name: body.name.trim(),
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+      await db.collection('project_types').insertOne(projectType)
+      const { _id, ...cleaned } = projectType
+      return handleCORS(NextResponse.json(cleaned))
+    }
+    if (route.startsWith('/project-types/') && method === 'DELETE') {
+      const projectTypeId = route.split('/')[2]
+      const deleteResult = await db.collection('project_types').deleteOne({ id: projectTypeId })
+      if (deleteResult.deletedCount === 0) {
+        return handleCORS(NextResponse.json(
+          { error: "Project type not found" },
+          { status: 404 }
+        ))
+      }
+      return handleCORS(NextResponse.json({ message: "Project type deleted successfully" }))
+    }
+
+    // Statuses endpoints
+    if (route === '/statuses' && method === 'GET') {
+      const statuses = await db.collection('statuses')
+        .find({})
+        .sort({ name: 1 })
+        .toArray()
+      const cleanedStatuses = statuses.map(({ _id, ...rest }) => rest)
+      return handleCORS(NextResponse.json(cleanedStatuses))
+    }
+    if (route === '/statuses' && method === 'POST') {
+      const body = await request.json()
+      if (!body.name || !body.name.trim()) {
+        return handleCORS(NextResponse.json(
+          { error: "Status name is required" },
+          { status: 400 }
+        ))
+      }
+      const existing = await db.collection('statuses').findOne({ name: body.name.trim() })
+      if (existing) {
+        return handleCORS(NextResponse.json(
+          { error: "Status already exists" },
+          { status: 409 }
+        ))
+      }
+      const status = {
+        id: uuidv4(),
+        name: body.name.trim(),
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+      await db.collection('statuses').insertOne(status)
+      const { _id, ...cleaned } = status
+      return handleCORS(NextResponse.json(cleaned))
+    }
+    if (route.startsWith('/statuses/') && method === 'DELETE') {
+      const statusId = route.split('/')[2]
+      const deleteResult = await db.collection('statuses').deleteOne({ id: statusId })
+      if (deleteResult.deletedCount === 0) {
+        return handleCORS(NextResponse.json(
+          { error: "Status not found" },
+          { status: 404 }
+        ))
+      }
+      return handleCORS(NextResponse.json({ message: "Status deleted successfully" }))
+    }
+
+    // Categories endpoints
+    if (route === '/categories' && method === 'GET') {
+      const categories = await db.collection('categories')
+        .find({})
+        .sort({ name: 1 })
+        .toArray()
+      const cleanedCategories = categories.map(({ _id, ...rest }) => rest)
+      return handleCORS(NextResponse.json(cleanedCategories))
+    }
+    if (route === '/categories' && method === 'POST') {
+      const body = await request.json()
+      if (!body.name || !body.name.trim()) {
+        return handleCORS(NextResponse.json(
+          { error: "Category name is required" },
+          { status: 400 }
+        ))
+      }
+      const existing = await db.collection('categories').findOne({ name: body.name.trim() })
+      if (existing) {
+        return handleCORS(NextResponse.json(
+          { error: "Category already exists" },
+          { status: 409 }
+        ))
+      }
+      const category = {
+        id: uuidv4(),
+        name: body.name.trim(),
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+      await db.collection('categories').insertOne(category)
+      const { _id, ...cleaned } = category
+      return handleCORS(NextResponse.json(cleaned))
+    }
+    if (route.startsWith('/categories/') && method === 'DELETE') {
+      const categoryId = route.split('/')[2]
+      const deleteResult = await db.collection('categories').deleteOne({ id: categoryId })
+      if (deleteResult.deletedCount === 0) {
+        return handleCORS(NextResponse.json(
+          { error: "Category not found" },
+          { status: 404 }
+        ))
+      }
+      return handleCORS(NextResponse.json({ message: "Category deleted successfully" }))
+    }
+
+    // Municipalities endpoints
+    if (route === '/municipalities' && method === 'GET') {
+      const municipalities = await db.collection('municipalities')
+        .find({})
+        .sort({ name: 1 })
+        .toArray()
+      const cleanedMunicipalities = municipalities.map(({ _id, ...rest }) => rest)
+      return handleCORS(NextResponse.json(cleanedMunicipalities))
+    }
+    if (route === '/municipalities' && method === 'POST') {
+      const body = await request.json()
+      if (!body.name || !body.name.trim()) {
+        return handleCORS(NextResponse.json(
+          { error: "Municipality name is required" },
+          { status: 400 }
+        ))
+      }
+      const existing = await db.collection('municipalities').findOne({ name: body.name.trim() })
+      if (existing) {
+        return handleCORS(NextResponse.json(
+          { error: "Municipality already exists" },
+          { status: 409 }
+        ))
+      }
+      const municipality = {
+        id: uuidv4(),
+        name: body.name.trim(),
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+      await db.collection('municipalities').insertOne(municipality)
+      const { _id, ...cleaned } = municipality
+      return handleCORS(NextResponse.json(cleaned))
+    }
+    if (route.startsWith('/municipalities/') && method === 'DELETE') {
+      const municipalityId = route.split('/')[2]
+      const deleteResult = await db.collection('municipalities').deleteOne({ id: municipalityId })
+      if (deleteResult.deletedCount === 0) {
+        return handleCORS(NextResponse.json(
+          { error: "Municipality not found" },
+          { status: 404 }
+        ))
+      }
+      return handleCORS(NextResponse.json({ message: "Municipality deleted successfully" }))
+    }
+
+    // Regions endpoints
+    if (route === '/regions' && method === 'GET') {
+      const regions = await db.collection('regions')
+        .find({})
+        .sort({ name: 1 })
+        .toArray()
+      const cleanedRegions = regions.map(({ _id, ...rest }) => rest)
+      return handleCORS(NextResponse.json(cleanedRegions))
+    }
+    if (route === '/regions' && method === 'POST') {
+      const body = await request.json()
+      if (!body.name || !body.name.trim()) {
+        return handleCORS(NextResponse.json(
+          { error: "Region name is required" },
+          { status: 400 }
+        ))
+      }
+      const existing = await db.collection('regions').findOne({ name: body.name.trim() })
+      if (existing) {
+        return handleCORS(NextResponse.json(
+          { error: "Region already exists" },
+          { status: 409 }
+        ))
+      }
+      const region = {
+        id: uuidv4(),
+        name: body.name.trim(),
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+      await db.collection('regions').insertOne(region)
+      const { _id, ...cleaned } = region
+      return handleCORS(NextResponse.json(cleaned))
+    }
+    if (route.startsWith('/regions/') && method === 'DELETE') {
+      const regionId = route.split('/')[2]
+      const deleteResult = await db.collection('regions').deleteOne({ id: regionId })
+      if (deleteResult.deletedCount === 0) {
+        return handleCORS(NextResponse.json(
+          { error: "Region not found" },
+          { status: 404 }
+        ))
+      }
+      return handleCORS(NextResponse.json({ message: "Region deleted successfully" }))
     }
 
     // Route not found
